@@ -9,8 +9,8 @@ pygments: true
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
-title : "自省集"
-tagline: "碎碎念 互联网 Linux"
+title : "Medal.Blog"
+tagline: "技术与灵感"
 author :
   name : Medal Huang
   email : medalhuang@gmail.com
@@ -81,7 +81,7 @@ JB :
   comments :
     provider : disqus
     disqus :
-      short_name : jekyllbootstrap
+      short_name : medalblog
     livefyre :
       site_id : 123
     intensedebate :
