@@ -1,3 +1,11 @@
+---
+layout: post
+title: Rails最佳实践: 利用Service优化Fat Model
+date: 2014-10-20 18:00:00
+disqus: y
+---
+
+
 # Rails最佳实践: 利用Service优化Fat Model
 
 
