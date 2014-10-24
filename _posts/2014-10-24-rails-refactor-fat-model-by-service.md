@@ -6,9 +6,6 @@ disqus: y
 ---
 
 
-# Rails最佳实践: 利用Service优化Fat Model
-
-
 本文主要说明什么时候需要重构fat model，以及通过一个简单的案例来讲解如何一步步重构复杂的model，把它变成扩展性良好的service。
 
 ## 源起
