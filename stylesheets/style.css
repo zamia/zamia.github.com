@@ -331,7 +331,7 @@ code {
   padding: 2px 4px 3px;
   border-radius: 2px;
   line-height: 1.3em;
-  display: inline-block;
+  display: block;
   vertical-align: baseline;
   zoom: 1;
   *display: inline;

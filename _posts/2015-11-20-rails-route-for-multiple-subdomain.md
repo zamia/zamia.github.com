@@ -19,7 +19,7 @@ Rails项目发展到较大规模的时候、或者为了其他各种原因，一
 ### constraint是基础
 Rails提供了constraints方法来对一组路由进行限制，比如官方文档（Rails 3.2）中提供的例子：
 
-```
+```ruby
 constraints(:id => /\d+\.\d+/) do
   resources :orders
 end
@@ -29,7 +29,7 @@ end
 
 那么，根据这个思路，我们可以限制一组路由只在某个子域名下生效，也就达到了多子域名的目的：
 
-```
+```ruby
 constraints :subdomain => "m" do
   resources :orders # mobile下
 end
@@ -43,7 +43,7 @@ end
 
 config/environments/development.rb中config段添加：
 
-```
+```ruby
 config.mobile_subdomain = "m"
 config.main_subdomain = "www"
 ```
@@ -68,7 +68,7 @@ end
 ### 先提下namespace
 scope日常不太常使用，因为大家一般都是使用namespace就够了，比如最常见的写法：
 
-```
+```ruby
 namespace :admin do
   resources :orders
 end
@@ -101,7 +101,7 @@ end
 
 所以，这三个参数是可以独立使用的，那么上面提到的子域名的问题的解决方案也就有了：
 
-```
+```ruby
 constraints :subdomain => Rails.configuration.mobile_subdomain do
   scope module: 'mobile' do 
     resources :orders
@@ -117,14 +117,14 @@ end
 ### 优化一下
 这样好像还不够好，这样写有一个小小的问题，就是你在mobile下面引用一个url helper的时候，比如：
 
-```
+```ruby
 ### app/mobile/orders/show.html.erb
 <%= link_to order_path(@order), order.id %>
 ```
 
 读代码的人比较难以直观的知道这个 order_path 是指的哪个域名下的url，而且如果多个子域名下有url路径重复的话，一旦写错，rails不会提示错误，只有访问的时候才会报错。所以，最好给scope加一个as参数，把mobile下的url helper独立出来：
 
-```
+```ruby
 ### 添加as参数会修改url helper
 constraints :subdomain => Rails.configuration.mobile_subdomain do
   scope module: 'mobile', as: 'mobile' do 
@@ -135,10 +135,11 @@ end
 ### 调用的时候
 <%= link_to mobile_order_path(@order), order.id %>
 ```
+
 ### namespace 和 scope 其实是一个东西
 其实事实上，看rails源码可以看到，namespace只不过是包装了一层，底层完全是用scope来实现的：
 
-```
+```ruby
 ### File actionpack/lib/action_dispatch/routing/mapper.rb, line 679
 def namespace(path, options = {})
   path = path.to_s
@@ -162,13 +163,13 @@ routes文件拆分有两个办法，一种是rails内建的，但是Rails4已经
 
 通过修改 "config/routes" 配置来解决：
 
-```
+```ruby
 config.paths["config/routes"] += Dir[Rails.root.join('config', 'routes','*.rb')]
 ```
 
 如果对加载顺序有依赖（最好别依赖），可以一个文件一个文件的加载:
 
-```
+```ruby
 config.paths["config/routes"] = %w(
       config/routes/admin.rb
       config/routes/api.rb
@@ -180,7 +181,7 @@ config.paths["config/routes"] = %w(
 
 利用instance_eval来加载其他路由文件即可：
 
-```
+```ruby
 Example::Application.routes.draw do
   def draw(routes_name)
     instance_eval(File.read(Rails.root.join("config", "routes", "#{routes_name}.rb")))
@@ -210,7 +211,7 @@ end
 2. 如果使用 \*\_url，那么一定要加上子域名的参数
   如果在跨域名访问的情况下（或者是mailer中），使用 \*\_url 的时候一定要加上 subdomain 的参数：
   
-  ```
+  ```ruby
   <%= link_to mobile_users_path(subdomain: Rails.configuration.mobile_subdomain), users.nickname %>
   ```
   
@@ -220,7 +221,7 @@ end
 4. javascript代码中引用url
   这种情况也不少，可以使用data-url的形式，如：
   
-  ```
+  ```ruby
   ### 这样
   <div data-url="<%= mobile_users_path %>"></div>
   

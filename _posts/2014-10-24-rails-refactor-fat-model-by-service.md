@@ -46,7 +46,7 @@ disqus: y
 ### 基本的表结构
 OrderContact 订单联系人表：跟订单是 1:1 的
 
-```
+```ruby
 order_id: integer
 real_name: string
 cellphone: string
@@ -56,17 +56,17 @@ email: string
 
 UserContact 常用旅客表：跟 User 是 N:1 的
 
-````
+```ruby
 user_id: integer
 real_name: string
 cellphone: string
 email: string
 ***: 其他字段忽略
-````
+```
 
 UserProfile 用户基本信息表， 跟User是 1:1 的
 
-```
+```ruby
 user_id: integer
 real_name: string
 cellphone: string
@@ -76,7 +76,7 @@ email: string
 
 如果是你来实现这个需求，你会怎么写？hoho，请继续看下去吧！
 
-```
+```ruby
 # 最基本的几个关联关系
 class User
   has_many :user_contacts
@@ -100,7 +100,7 @@ end
 
 常见的rails的写法是，在 order_contact model层添加after_save回调，分别去更新对应的user_contact和user_profile即可，写起来也会很快捷；
 
-```
+```ruby
 class OrderContact < ActiveRecord::Base
   belongs_to :order
   
@@ -148,7 +148,7 @@ end
 
 提供封装好的写接口:
 
-```
+```ruby
 class OrderContact
   # 删除原有的 after_save 以及相关的方法
 end
@@ -179,7 +179,7 @@ end
 ```
 
 然后在controller里面直接调用
-```
+```ruby
 class OrderController < ApplicationController
   def create
     # 创建订单的时候保存联系人信息
@@ -198,7 +198,7 @@ end
 * 在controller中原来是自动调用，现在需要写独立的代码，以后将来又有了新的类，不只是UserProfile和UserContact呢？就得在很多地方多添加一行，比如新的类是 UserInfo，那在每个controller里面都必须都写一行；
 * 静态函数里面其实隐含了一个需求，那就是更新常用联系人是根据 真实姓名 来更新的, 在这一行里面提现：
 
-```
+```ruby
   user_contact = user.user_contacts.by_real_name(real_name).first_or_initialize
 ```
 
@@ -213,7 +213,7 @@ end
 
 model层改成这个样子：
 
-```
+```ruby
 class UserContact < ActiveRecord::Base
   def update_by_order_contact(order_contact)
     self.real_name = order_contact.real_name
@@ -235,7 +235,7 @@ end
 
 新的UserInfoService只是一个简单的ruby类：
 
-```
+```ruby
 class UserInfoService
   def initialize(user)
     @user = user
@@ -259,7 +259,7 @@ end
 
 新的控制器中代码的写法: 
 
-```
+```ruby
 class OrderController < ApplicationController
   def create
     # 创建订单的时候保存联系人信息
