@@ -12,12 +12,9 @@ Author: amoblin
 This file is created by Marboo<http://marboo.io> template file $MARBOO_HOME/.media/starts/default.md
 本文件由 Marboo<http://marboo.io> 模板文件 $MARBOO_HOME/.media/starts/default.md 创建
 -->
+翻译自：http://markdaggett.com/blog/2011/12/01/transactions-in-rails/
 
 发现大鱼团队中不少同学对Rails 中事务的使用不当，发现这篇文章不错，花一点时间翻译了一下，希望对各位有用~
-
-# Rails中的事务
-
-翻译自：http://markdaggett.com/blog/2011/12/01/transactions-in-rails/
 
 ## 使用事务的原因
 事务用来确保多条SQL语句要么全部执行成功、要么不执行。事务可以帮助开发者保证应用中的数据一致性。常见的使用事务的场景是银行转账，钱从一个账户转移到另外一个账户。如果中间的某一步出错，那么整个过程应该重置。这个例子的伪码如下：

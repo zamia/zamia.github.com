@@ -15,8 +15,8 @@ Rails项目发展到较大规模的时候、或者为了其他各种原因，一
 
 这篇文章算是对上述问题进行的一个较深入的总结和实操，请阅读之前需要Rails路由先有个大概的了解，期望大家读完之后对Rails路由理解的更加深入。
 
-### 多子域名问题解决
-### constraint是基础
+### 多子域名问题解决: constraint是基础
+
 Rails提供了constraints方法来对一组路由进行限制，比如官方文档（Rails 3.2）中提供的例子：
 
 ```ruby
@@ -211,9 +211,9 @@ end
 2. 如果使用 \*\_url，那么一定要加上子域名的参数
   如果在跨域名访问的情况下（或者是mailer中），使用 \*\_url 的时候一定要加上 subdomain 的参数：
   
-  ```ruby
-  <%= link_to mobile_users_path(subdomain: Rails.configuration.mobile_subdomain), users.nickname %>
-  ```
+```ruby
+<%= link_to mobile_users_path(subdomain: Rails.configuration.mobile_subdomain), users.nickname %>
+```
   
 3. 使用url helper，而不是字符串来代表地址。
   这一点，初级的rails工程师很容易犯，觉得写一个字符串非常简单，干嘛还要搞一个url helper？可是一旦使用字符串表达url，一旦需要重构代码、升级产品的时候基本上代码是不可维护的，这时候只能默默流泪了。
@@ -221,15 +221,15 @@ end
 4. javascript代码中引用url
   这种情况也不少，可以使用data-url的形式，如：
   
-  ```ruby
-  ### 这样
-  <div data-url="<%= mobile_users_path %>"></div>
-  
-  ### 或者这样
-  <%= content_tag :div, :'data-url' => mobile_users_path do %>
-    some content
-  <% end %>
-  ```
+```ruby
+### 这样
+<div data-url="<%= mobile_users_path %>"></div>
+
+### 或者这样
+<%= content_tag :div, :'data-url' => mobile_users_path do %>
+  some content
+<% end %>
+```
 
 ## 差不多就是这样
 好，差不多就是这样，希望在多子域名的问题上对大家有帮助，欢迎大家提意见~
