@@ -1,7 +1,7 @@
 ---
 layout: post
 title: nginx+rails下进行文件的安全下载
-date: 2016-02-04 18:30:00
+date: 2016-02-04 18:00:00
 disqus: y
 ---
 
