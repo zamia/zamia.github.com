@@ -26,89 +26,89 @@ disqus: y
 
 1. 浏览器访问一个地址，比如 /download/files/123 ，这个地址对应一个需要验证权限的文件；
 
-  ~~~
-  GET /download/files/123 HTTP/1.1
-  ~~~
+    ```
+    GET /download/files/123 HTTP/1.1
+    ```
 
 1. nginx收到这个请求之后根据路由配置，把请求转发到rails。
 	
-	nginx转发的时候根据配置，添加上两个参数，转发给rails。后端rails服务器会根据这两个参数来对response body进行修改，后面会提到。
+    nginx转发的时候根据配置，添加上两个参数，转发给rails。后端rails服务器会根据这两个参数来对response body进行修改，后面会提到。
 
-  ~~~
-  GET /download/files/123 HTTP/1.0
-  X-Forwarded-For: 127.0.0.1
-  X-Sendfile-Type: X-Accel-Redirect
-  X-Accel-Mapping: /var/www/fishtrip/private=/private
-  ~~~
+    ```
+    GET /download/files/123 HTTP/1.0
+    X-Forwarded-For: 127.0.0.1
+    X-Sendfile-Type: X-Accel-Redirect
+    X-Accel-Mapping: /var/www/fishtrip/private=/private
+    ```
 
-	上面的参数 X-Sendfile-Type 告知后端nginx支持什么样的参数（像apache、lighttpd支持的参数名称不同）；参数 X-Accel-Mapping 告知后端应该怎么样做文件名称的mapping。
+    上面的参数 X-Sendfile-Type 告知后端nginx支持什么样的参数（像apache、lighttpd支持的参数名称不同）；参数 X-Accel-Mapping 告知后端应该怎么样做文件名称的mapping。
 
 1. rails收到这个请求之后，正常流进某个controller#action，经过业务代码的判断之后，找到这个url对应的真正的文件名，然后使用sendfile发送文件。
 
-  ~~~ruby
-  def show
-    pic = File.find params[:id]
-    send_file pic.path, type: "image/jpeg", disposition: 'inline'
-  end
-  ~~~
-	
-	其实在整个过程中，rails的背后是 [Rack::Sendfile](http://www.rubydoc.info/github/rack/rack/Rack/Sendfile) 这个middleware在工作。看看它的源码中的call函数的实现：
-	
-  ~~~ruby
-# File rack/lib/rack/sendfile.rb
-  case type = variation(env)
-  when 'X-Accel-Redirect'
-     path = F.expand_path(body.to_path)
-     if url = map_accel_path(env, path)
-       headers['Content-Length'] = '0'
-       headers[type] = url
-       body = []
-     else
-       env['rack.errors'].puts "X-Accel-Mapping header missing"
-     end
-   when ...
-   end
-   # some code here
-  ~~~
-	
-	可以看到这个middleware吧content-length置为0，把body置空，返回给前端一个计算过mapping的url。
-	
-	其中的函数 map_accel_path 是private函数，长这样：
-	
-  ~~~ruby
-  def map_accel_path(env, file)
-      if mapping = env['HTTP_X_ACCEL_MAPPING']
-        internal, external = mapping.split('=', 2).map{ |p| p.strip }
-        file.sub(/^#{internal}/i, external)
-      end
+    ```ruby
+    def show
+      pic = File.find params[:id]
+      send_file pic.path, type: "image/jpeg", disposition: 'inline'
     end
-  ~~~
-	
-	其实就是根据nginx传入的 X-Accel-Mapping 参数把实际的地址替换成一个mapping地址。
-	
-	所以，这样也就不难猜测我们自己写的action里面的sendfile的实现了，sendfile只需要实现一个支持 to_path 调用的对象即可。去Rails中看看它的实现：
-	
-  ~~~ruby
+    ```
+    
+    其实在整个过程中，rails的背后是 [Rack::Sendfile](http://www.rubydoc.info/github/rack/rack/Rack/Sendfile) 这个middleware在工作。看看它的源码中的call函数的实现：
+    
+    ```ruby
+    # File rack/lib/rack/sendfile.rb
+    case type = variation(env)
+    when 'X-Accel-Redirect'
+       path = F.expand_path(body.to_path)
+       if url = map_accel_path(env, path)
+         headers['Content-Length'] = '0'
+         headers[type] = url
+         body = []
+       else
+         env['rack.errors'].puts "X-Accel-Mapping header missing"
+       end
+     when ...
+     end
+     # some code here
+    ```
+    
+    可以看到这个middleware吧content-length置为0，把body置空，返回给前端一个计算过mapping的url。
+    
+    其中的函数 map_accel_path 是private函数，长这样：
+    
+    ```ruby
+    def map_accel_path(env, file)
+        if mapping = env['HTTP_X_ACCEL_MAPPING']
+          internal, external = mapping.split('=', 2).map{ |p| p.strip }
+          file.sub(/^#{internal}/i, external)
+        end
+      end
+    ```
+    
+    其实就是根据nginx传入的 X-Accel-Mapping 参数把实际的地址替换成一个mapping地址。
+    
+    所以，这样也就不难猜测我们自己写的action里面的sendfile的实现了，sendfile只需要实现一个支持 to_path 调用的对象即可。去Rails中看看它的实现：
+    
+    ```ruby
 # File actionpack/lib/action_controller/metal/data_streaming.rb
-  def send_file(path, options = {}) #:doc:
-     # 省略一些代码
-     self.status = options[:status] || 200
-     self.content_type = options[:content_type] if options.key?(:content_type)
-     self.response_body = FileBody.new(path)
-   end
-  ~~~
-	
-	里面的 FileBody 类就支持 to_path 调用；
-	
-	所以，经过 Rails 和 Rack::Sendfile 的配合，rails返回给nginx的就是一个没有 body ，只有 headers 的 response ，长下面这个样子（来源于 nginx 的 debug 日志，略去了部分内容）：
-	
-  ~~~
-  http proxy header: "Content-Disposition: inline; filename="abc.jpg""
-  http proxy header: "Content-Transfer-Encoding: binary"
-  http proxy header: "Content-Type: image/jpeg"
-  http proxy header: "Content-Length: 0"
-  http proxy header: "X-Accel-Redirect: /private/files/abc.jpg"
-  ~~~
+    def send_file(path, options = {}) #:doc:
+       # 省略一些代码
+       self.status = options[:status] || 200
+       self.content_type = options[:content_type] if options.key?(:content_type)
+       self.response_body = FileBody.new(path)
+     end
+    ```
+    
+    里面的 FileBody 类就支持 to_path 调用；
+    
+    所以，经过 Rails 和 Rack::Sendfile 的配合，rails返回给nginx的就是一个没有 body ，只有 headers 的 response ，长下面这个样子（来源于 nginx 的 debug 日志，略去了部分内容）：
+    
+    ```
+    http proxy header: "Content-Disposition: inline; filename="abc.jpg""
+    http proxy header: "Content-Transfer-Encoding: binary"
+    http proxy header: "Content-Type: image/jpeg"
+    http proxy header: "Content-Length: 0"
+    http proxy header: "X-Accel-Redirect: /private/files/abc.jpg"
+    ```
 	
 1. nginx 收到 rails 返回的数据之后，会检查 X-Accel-Redirect 参数的值，然后内部再根据 location 的配置进行内部跳转，找到真正的文件地址（需要配置，见下文），并且调用操作系统的 sendfile 接口，直接返回给用户。
 
@@ -124,50 +124,50 @@ disqus: y
 
 1. 跳转后端时参数配置
 
-  ~~~ini
-  set $app_root /var/some/dir;
+    ```
+    set $app_root /var/some/dir;
 
-  location /download {
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Sendfile-Type X-Accel-Redirect;
-          proxy_set_header X-Accel-Mapping "$app_root/private=/private";
+    location /download {
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Sendfile-Type X-Accel-Redirect;
+            proxy_set_header X-Accel-Mapping "$app_root/private=/private";
 
-          proxy_set_header Host $http_host;
-          proxy_redirect off;
-          expires off;
+            proxy_set_header Host $http_host;
+            proxy_redirect off;
+            expires off;
 
-          proxy_pass http://backend;
-  }
-  ~~~
-	
-	这个配置的作用是 nginx 在把请求转发给rails 后端的时候添加 X-Senfile-Type 和 X-Accel-Mapping 参数；
+            proxy_pass http://backend;
+    }
+    ```
+    
+    这个配置的作用是 nginx 在把请求转发给rails 后端的时候添加 X-Senfile-Type 和 X-Accel-Mapping 参数；
 
 2. 收到后端回复后内部地址的配置 
 
-  ~~~ini
-  location /private {
-          internal;
-          alias $app_root/private;
-  }
-  ~~~
-	
-	这个配置的作用是 nginx 收到 rails 后端返回的值时可以正确找到文件的实际地址；
+    ```
+    location /private {
+            internal;
+            alias $app_root/private;
+    }
+    ```
+    
+    这个配置的作用是 nginx 收到 rails 后端返回的值时可以正确找到文件的实际地址；
 
 ### rails
 
 rails 的配置就更简单了，添加一句话即可：
 
-~~~ruby
+```ruby
 config.action_dispatch.x_sendfile_header = 'X-Accel-Redirect'
-~~~
+```
 
 ### capistrano
 
 capistrano 的部署使用了软链的方法，所以上面nginx 配置的地方，需要添加一个正则即可。这样后端 rails 就可以正常的去 mapping 了（也就是 Rack::Sendfile 里面的 map_accel_path 是支持正则的）：
 
-~~~ini
+```
 proxy_set_header X-Accel-Mapping "$app_root/releases/\d{14}/private=/private";
-~~~
+```
 
 如果实际部署情况跟这个不一致，只要走类似的方法就行了，你懂的~
 
