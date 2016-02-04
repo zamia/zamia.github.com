@@ -14,9 +14,6 @@ links:
   - name:         大鱼>
     url:          http://fishtrip.cn
     external:     true
-pygments:         true
+highlighter:         rouge
 permalink:        pretty
-markdown:         redcarpet
-redcarpet:
-  extensions:
-    - smart
+markdown:         kramdown
