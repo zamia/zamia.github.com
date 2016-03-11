@@ -1,11 +1,9 @@
 ---
 layout: post
-title: Rails Decorator 使用帮助( Drapper: View Models for Rails )
+title: Drapper: View Models for Rails
 date: 2016-02-28 11:00:00
 disqus: y
 ---
-
-# Drapper: View Models for Rails
 
 Drapper 使用『面向对象』的方式，给 Rails 添加了独立的视图层。
 
