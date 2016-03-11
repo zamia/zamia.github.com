@@ -315,6 +315,12 @@ section.post, section > p {
   margin: 0;
   padding: 0; }
 
+code {
+  display: inline;
+  font-weight: bold;
+  color: black;
+}
+
 pre {
   overflow-x: auto;
   padding: 10px 60px;
@@ -322,9 +328,10 @@ pre {
   line-height: 1.2em;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
-  box-sizing: border-box; }
+  box-sizing: border-box; 
+}
 
-code {
+pre code {
   font-size: 13px;
   color: #eee;
   background: #39382e;
@@ -335,7 +342,8 @@ code {
   vertical-align: baseline;
   zoom: 1;
   *display: inline;
-  *vertical-align: auto; }
+  *vertical-align: auto; 
+}
 
 img {
   max-width: 100%; }
