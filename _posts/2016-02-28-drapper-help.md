@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Drapper: View Models for Rails
+title: Drapper - View Models for Rails
 date: 2016-02-28 11:00:00
 disqus: y
 ---
