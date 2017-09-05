@@ -49,7 +49,7 @@ Sneakers 内部借助这个机制实现了消息的重试，同时保证了消�
 ### 概览图
 直接上我画的这个 RabbitMQ + Sneakers 内部处理机制的消息流转图：
 
-![](images/posts/rabbitmq-sneakers.jpg)
+![RabbitMQ-Sneakers 消息流转图](/images/posts/rabbitmq-sneakers.jpg)
 
 
 上面这个图中：
@@ -154,7 +154,7 @@ end
 
 上面这个 failture_count 怎么实现的呢？其实是利用了 RabbitMQ 的特性。RabbitMQ 中，每当消息被「dead-lettered」，在消息的头 x-death 中会详细记录消息死亡的计数信息，大概长这个样子：
 
-![RabbitMQ 中 x-death 头](images/posts/rabbitmq-x-death.jpg)
+![RabbitMQ 中 x-death 头](/images/posts/rabbitmq-x-death.jpg)
 
 我们看看 Sneakers 中的实现：
 
