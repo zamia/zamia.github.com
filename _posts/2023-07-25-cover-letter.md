@@ -1,6 +1,6 @@
 ---
 layout: post
-title: A Simple Cover Letter 
+title: A Not Too-Simple Cover Letter 
 date: 2023-07-25 23:20:31
 ---
 
