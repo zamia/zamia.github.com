@@ -1,0 +1,23 @@
+
+body{
+  font-family: source-serif-pro,
+    Georgia,
+    Cambria,
+    "Times New Roman",
+    Times,
+    serif;
+}
+.post-content{
+  h2,h3{
+    margin-top: 40px;
+  }
+  h4{
+    margin-top: 30px;
+    display: list-item;
+    margin-left: 1em;
+  }
+}
+
+.post-content h3{
+  color: #6558f5;
+}

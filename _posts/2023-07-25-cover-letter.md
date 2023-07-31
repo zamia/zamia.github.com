@@ -4,7 +4,7 @@ title: A Simple Cover Letter
 date: 2023-07-25 23:20:31
 ---
 
-## Hi, this is Medal Huang
+### Hi, this is Medal Huang
 
 You may have already glanced over my resume, but the constraints of a chronological sequence can often obscure the salient points of my 15-year professional journey. 
 
